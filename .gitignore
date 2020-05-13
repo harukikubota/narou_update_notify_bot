@@ -1,0 +1,9 @@
+/_build/
+/deps/
+/doc/
+/.elixir_ls
+/.idea
+erl_crash.dump
+*.ez
+narou_update_notify_bot-*.tar
+/priv/static/
