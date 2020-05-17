@@ -1,7 +1,7 @@
 defmodule NarouUpdateNotifyBot.Template.Novel.ReadLater.Add do
   use NarouUpdateNotifyBot.Template
   alias LineBot.Message, as: M
-  alias NarouUpdateNotifyBot.Template.Novel.Common
+  alias NarouUpdateNotifyBot.Template.Common
 
   def render(:ok, dao) do
     %M.Text{text:
