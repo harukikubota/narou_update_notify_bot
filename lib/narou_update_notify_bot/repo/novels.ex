@@ -28,7 +28,8 @@ defmodule NarouUpdateNotifyBot.Repo.Novels do
             novel_ch = _changeset(%{episode_count: episode_count, title: title, ncode: ncode, remote_updated_at: remote_updated_at})
 
             if novel_ch.valid? do
-              novel = Ecto.build_assoc(Repo.Writers.find_or_create_by(remote_writer_id), :novels, novel_ch.changes) |> Repo.insert!
+              {:ok, writer} = Repo.Writers.find_or_create_by(remote_writer_id)
+              novel = Ecto.build_assoc(writer, :novels, novel_ch.changes) |> Repo.insert!
               {:ok, novel}
             end
 
