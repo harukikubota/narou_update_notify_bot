@@ -19,7 +19,7 @@ defmodule NarouUpdateNotifyBot.Template.Novel.ReceiveNovelUrl do
       actions: [
         action(:read_later_update, dao),
         action(:read_later_delete, dao),
-        action(:update_notify_add, dao)
+        action(:read_later_change, dao)
       ],
       date: format_date_yymmddhhmi(dao.novel.remote_updated_at)
     } |> Map.merge(dao)
@@ -43,12 +43,14 @@ defmodule NarouUpdateNotifyBot.Template.Novel.ReceiveNovelUrl do
     _action(%{action: "/novel/read_later/add", novel_id: dao.novel.id, episode_id: dao.episode_id}, "後で読むに追加する")
   end
 
-  defp action(:update_notify_add, dao), do: _action(%{action: "/novel/read_later/change_to_update_notify", novel_id: dao.novel.id}, "更新通知に変更する")
+  defp action(:update_notify_add, dao), do: _action(%{action: "/novel/read_later/change_to_update_notify", novel_id: dao.novel.id}, "更新通知に追加する")
 
   defp action(:read_later_update, dao) do
     label = "再開位置更新 :  #{dao.old_episode_id} |> #{dao.episode_id}"
     _action(%{action: "/novel/read_later/update", novel_id: dao.novel.id, episode_id: dao.episode_id}, label)
   end
+
+  defp action(:read_later_change, dao), do: _action(%{action: "/novel/read_later/change_to_update_notify", novel_id: dao.novel.id}, "更新通知に変更する")
   defp action(:read_later_delete, dao), do: _action(%{action: "/novel/read_later/delete", novel_id: dao.novel.id}, "後で読むから削除する")
   defp action(:update_notify_delete, dao), do: _action(%{action: "/novel/update_notify/delete", novel_id: dao.novel.id}, "更新通知から削除する")
 
