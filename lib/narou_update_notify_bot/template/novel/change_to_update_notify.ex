@@ -1,4 +1,4 @@
-defmodule NarouUpdateNotifyBot.Template.Novel.ReadLater.ChangeToUpdateNotify do
+defmodule NarouUpdateNotifyBot.Template.Novel.ChangeToUpdateNotify do
   use NarouUpdateNotifyBot.Template
   alias LineBot.Message, as: M
   alias NarouUpdateNotifyBot.Template.Common

@@ -1,6 +1,6 @@
 defmodule NarouUpdateNotifyBot.Command.Novel.ReceiveNovelUrl do
   use NarouUpdateNotifyBot.Command
-  alias NarouUpdateNotifyBot.Repo.{Novels, Users, UsersCheckNovels, UsersReadLaterNovels}
+  alias NarouUpdateNotifyBot.Repo.{Novels, Users, UsersCheckNovels}
 
   def call(param) do
     case Novels.find_or_create_by(param.ncode) do
@@ -10,10 +10,10 @@ defmodule NarouUpdateNotifyBot.Command.Novel.ReceiveNovelUrl do
         episode_id = if param.episode_id == "", do: 1, else: param.episode_id
         dao = %{novel: novel, episode_id: episode_id}
 
-        if UsersCheckNovels.registered?(user.id, novel.id) do
+        if UsersCheckNovels.registered?(user.id, novel.id, :update_notify) do
           render_with_send(:registered_update_notify, dao, param.key)
         else
-          record = UsersReadLaterNovels.find(user.id, novel.id)
+          record = UsersCheckNovels.find(user.id, novel.id, :read_later)
           unless is_nil(record) do
             dao = %{old_episode_id: record.restart_episode_id} |> Map.merge(dao)
 

@@ -9,15 +9,34 @@ defmodule NarouUpdateNotifyBot.Entity.UserCheckNovel do
     belongs_to :novel, Novel
     field :do_notify, :boolean
     field :turn_off_notification_at, :utc_datetime
+    field :restart_episode_id, :integer
+    field :type, :string
 
     timestamps()
   end
 
-  def changeset(struct, params) do
+  @types ~w/update_notify read_later/
+
+  def ch_update_notify(struct, params) do
     struct
-    |> cast(params, [:user_id, :novel_id])
+    |> cast(params, [:user_id, :novel_id, :type])
     |> validate_required([:user_id, :novel_id])
     |> foreign_key_constraint(:user_id)
     |> foreign_key_constraint(:novel_id)
+    |> set_type("update_notify")
+  end
+
+  def ch_read_later(struct, params) do
+    struct
+    |> cast(params, [:user_id, :novel_id, :restart_episode_id, :type])
+    |> validate_required([:user_id, :novel_id, :restart_episode_id])
+    |> validate_number(:restart_episode_id, greater_than: 0)
+    |> foreign_key_constraint(:user_id)
+    |> foreign_key_constraint(:novel_id)
+    |> set_type("read_later")
+  end
+
+  def set_type(ch, type) do
+    put_change(ch, :type, type)
   end
 end

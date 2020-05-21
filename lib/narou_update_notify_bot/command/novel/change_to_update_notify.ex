@@ -1,6 +1,6 @@
-defmodule NarouUpdateNotifyBot.Command.Novel.ReadLater.ChangeToUpdateNotify do
+defmodule NarouUpdateNotifyBot.Command.Novel.ChangeToUpdateNotify do
   use NarouUpdateNotifyBot.Command
-  alias NarouUpdateNotifyBot.Repo.{Novels, UsersReadLaterNovels, UsersCheckNovels}
+  alias NarouUpdateNotifyBot.Repo.{Novels, UsersCheckNovels}
   alias NarouUpdateNotifyBot.Command.Novel.Helper.UserCallableState
 
   def call(param) do
@@ -11,7 +11,7 @@ defmodule NarouUpdateNotifyBot.Command.Novel.ReadLater.ChangeToUpdateNotify do
     case UserCallableState.judge(:read_later, :change_to_update_notify, %{user_id: user.id, novel_id: novel.id}) do
       {:error} -> render_with_send(:error, dao, param.key)
       {:ok}    ->
-        UsersReadLaterNovels.unlink_to(user.id, novel.id)
+        UsersCheckNovels.unlink_to(user.id, novel.id)
         UsersCheckNovels.link_to(user.id, novel.id)
         render_with_send(:ok, dao, param.key)
     end
