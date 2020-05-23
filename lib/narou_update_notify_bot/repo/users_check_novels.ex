@@ -41,7 +41,7 @@ defmodule NarouUpdateNotifyBot.Repo.UsersCheckNovels do
         where: n.user_id == ^user_id and n.novel_id == ^novel_id
       )
       |> Repo.update_all(set: set)
-      {:ok, Novels.novel_datail("update_notify", user_id, novel_id)}
+      {:ok, Novels.novel_detail("update_notify", user_id, novel_id)}
     else
       {:error}
     end

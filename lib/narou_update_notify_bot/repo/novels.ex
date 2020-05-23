@@ -19,20 +19,20 @@ defmodule NarouUpdateNotifyBot.Repo.Novels do
     Repo.get(Novel, id)
   end
 
-  def novel_datail(type, user_id), do: _novel_datail(type, user_id) |> Repo.all
-  def novel_datail(type, user_id, novel_id) do
-    _novel_datail(type, user_id)
+  def novel_detail(type, user_id), do: _novel_detail(type, user_id) |> Repo.all
+  def novel_detail(type, user_id, novel_id) do
+    _novel_detail(type, user_id)
     |> where([n,_,_,_], n.id == ^novel_id)
     |> first()
     |> Repo.one
   end
 
-  defp _novel_datail(type, user_id) do
-    novel_datail_query(type, user_id)
-    |> novel_datail_additional_columns(type)
+  defp _novel_detail(type, user_id) do
+    novel_detail_query(type, user_id)
+    |> novel_detail_additional_columns(type)
   end
 
-  defp novel_datail_query(type, user_id) do
+  defp novel_detail_query(type, user_id) do
     from n in Novel,
       join: uc in UserCheckNovel, on: n.id == uc.novel_id,
       join: w  in Writer        , on: n.writer_id == w.id,
@@ -47,8 +47,8 @@ defmodule NarouUpdateNotifyBot.Repo.Novels do
       }
   end
 
-  defp novel_datail_additional_columns(q, "update_notify"), do: q |> select_merge([_,uc,_,_], %{do_notify: uc.do_notify})
-  defp novel_datail_additional_columns(q, "read_later"),    do: q |> select_merge([_,uc,_,_], %{restart_episode_id: uc.restart_episode_id, restart_index_updated_at: uc.updated_at})
+  defp novel_detail_additional_columns(q, "update_notify"), do: q |> select_merge([_,uc,_,_], %{do_notify: uc.do_notify})
+  defp novel_detail_additional_columns(q, "read_later"),    do: q |> select_merge([_,uc,_,_], %{restart_episode_id: uc.restart_episode_id, restart_index_updated_at: uc.updated_at})
 
   def find_by_ncode(ncode) do
     Repo.get_by(Novel, ncode: ncode)

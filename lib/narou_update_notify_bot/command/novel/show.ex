@@ -4,7 +4,7 @@ defmodule NarouUpdateNotifyBot.Command.Novel.Show do
 
   def call(param) do
     user = Helper.current_user(param.user_id)
-    novel = Novels.novel_datail(param.data.type, user.id, param.data.novel_id)
+    novel = Novels.novel_detail(param.data.type, user.id, param.data.novel_id)
 
     if novel do
       render_with_send(:ok, %{novel: novel, type: param.data.type}, param.key)
