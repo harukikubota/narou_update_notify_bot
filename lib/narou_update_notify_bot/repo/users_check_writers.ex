@@ -7,6 +7,10 @@ defmodule NarouUpdateNotifyBot.Repo.UsersCheckWriters do
     !!(from(UserCheckWriter, where: [user_id: ^user_id, writer_id: ^writer_id]) |> first() |> Repo.one())
   end
 
+  def user_register_count(user_id) do
+    Repo.one from uc in UserCheckWriter, where: uc.user_id == ^user_id, select: count()
+  end
+
   def link_to(user_id, writer_id) do
     UserCheckWriter.changeset(%UserCheckWriter{}, %{user_id: user_id, writer_id: writer_id}) |> Repo.insert!
   end

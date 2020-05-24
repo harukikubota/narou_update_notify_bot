@@ -14,7 +14,7 @@ defmodule NarouUpdateNotifyBot.Template.Writer.ReceiveWriterUrl do
 
   def render(:registered, dao) do
     %{
-      title: "更新通知小説",
+      title: "更新通知作者",
       actions: [action(:delete, dao)],
     } |> Map.merge(dao)
     |> _template()
@@ -22,7 +22,7 @@ defmodule NarouUpdateNotifyBot.Template.Writer.ReceiveWriterUrl do
 
   def render(:no_data, _), do: %M.Text{text: "存在しない作者か、作者によって検索除外に設定されています。"}
 
-  defp action(:add, dao), do: _action(%{action: "/writer/add", writer_id: dao.writer.id}, "更新通知に追加する")
+  defp action(:add, dao), do: _action(%{action: "/writer/add", writer_id: dao.writer.id}, "更新通知に登録する")
   defp action(:delete, dao), do: _action(%{action: "/writer/delete", writer_id: dao.writer.id}, "更新通知から削除する")
 
   defp _template(dao) do

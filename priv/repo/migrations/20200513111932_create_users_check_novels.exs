@@ -7,6 +7,8 @@ defmodule NarouUpdateNotifyBot.Repo.Migrations.CreateUserCheckNovels do
       add :novel_id, references(:novels)
       add :do_notify, :boolean, default: true
       add :turn_off_notification_at, :utc_datetime
+      add :restart_episode_id, :integer
+      add :type, :string
 
       timestamps()
     end
