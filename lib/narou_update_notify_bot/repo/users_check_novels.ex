@@ -8,12 +8,22 @@ defmodule NarouUpdateNotifyBot.Repo.UsersCheckNovels do
     !!(find(user_id, novel_id, type))
   end
 
+  def user_register_count(type, user_id) do
+    Repo.one(
+      from uc in UserCheckNovel,
+        where: uc.user_id == ^user_id and uc.type == ^type,
+        select: count()
+    )
+  end
+
   def link_to(user_id, novel_id) do
-    UserCheckNovel.ch_update_notify(%UserCheckNovel{}, %{user_id: user_id, novel_id: novel_id}) |> Repo.insert!
+    UserCheckNovel.ch_update_notify(%UserCheckNovel{}, %{user_id: user_id, novel_id: novel_id})
+    |> Repo.insert!
   end
 
   def link_to(user_id, novel_id, restart_episode_id) do
-    UserCheckNovel.ch_read_later(%UserCheckNovel{}, %{user_id: user_id, novel_id: novel_id, restart_episode_id: restart_episode_id}) |> Repo.insert!
+    UserCheckNovel.ch_read_later(%UserCheckNovel{}, %{user_id: user_id, novel_id: novel_id, restart_episode_id: restart_episode_id})
+    |> Repo.insert!
   end
 
   def unlink_to(user_id, novel_id) do

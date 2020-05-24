@@ -51,7 +51,20 @@ defmodule NarouUpdateNotifyBot.Repo.Novels do
   defp novel_detail_additional_columns(q, "read_later"),    do: q |> select_merge([_,uc,_,_], %{restart_episode_id: uc.restart_episode_id, restart_index_updated_at: uc.updated_at})
 
   def find_by_ncode(ncode) do
-    Repo.get_by(Novel, ncode: ncode)
+    from(
+      n in Novel,
+      join: w  in Writer        , on: n.writer_id == w.id,
+      join: ne in subquery(NovelEpisodes.novel_last_episodes_query),
+      on: ne.novel_id == n.id,
+      where: n.ncode == ^ncode,
+      select: %{
+        id: n.id, ncode: n.ncode, title: n.title,
+        writer_name: w.name, writer_id: n.writer_id,
+        episode_id: ne.episode_id, remote_created_at: ne.remote_created_at
+      }
+    )
+    |> first()
+    |> Repo.one
   end
 
   def find_or_create_by(ncode) do
@@ -69,7 +82,10 @@ defmodule NarouUpdateNotifyBot.Repo.Novels do
 
             {:ok, writer} = Repo.Writers.find_or_create_by(remote_writer_id)
 
-            Ecto.Changeset.change(novel, %{writer_id: writer.id}) |> Repo.update
+            {:ok, tmp} = Ecto.Changeset.change(novel, %{writer_id: writer.id})
+            |> Repo.update
+
+            {:ok, find_by_ncode(tmp.ncode)}
 
           {:no_data} -> {:no_data}
           {_, _}     -> {:error}
@@ -79,5 +95,20 @@ defmodule NarouUpdateNotifyBot.Repo.Novels do
 
   def create(%{ncode: ncode, title: title}) do
     %Novel{} |> Map.merge(%{title: title, ncode: ncode}) |> Repo.insert!
+  end
+
+  def records_for_fetch() do
+    from(
+      n in Novel,
+      join: ne in subquery(NovelEpisodes.novel_last_episodes_query),
+      on: ne.novel_id == n.id,
+      where: n.remote_deleted == false,
+      order_by: [desc: n.ncode],
+      select: %{
+        id: n.id, ncode: n.ncode,
+        episode_id: ne.episode_id
+      }
+    )
+    |> Repo.all
   end
 end
