@@ -6,6 +6,8 @@ defmodule NarouUpdateNotifyBot.Entity.User do
   schema "users" do
     field :line_id, :string, null: false
     field :enabled, :boolean, default: true
+    field :novel_register_max,  :integer, default: 50
+    field :writer_register_max, :integer, default: 50
 
     many_to_many :novels, Novel, join_through: UserCheckNovel
     many_to_many :writers, Writer, join_through: UserCheckWriter

@@ -1,8 +1,10 @@
 defmodule NarouUpdateNotifyBot.Template.Helper do
   def format_date_yymmddhhmi(date) do
     date = NaiveDateTime.add(date, 3600 * 9)
+
+    year = date.year |> to_string() |> String.split_at(2) |> elem(1)
     date =
-      [y: date.year, m: date.month, d: date.day, h: date.hour, mi: date.minute]
+      [y: year, m: date.month, d: date.day, h: date.hour, mi: date.minute]
       |> Enum.map(fn {k, v} -> {k, String.pad_leading(to_string(v), 2, "0")} end)
       |> Map.new
 
@@ -23,4 +25,6 @@ defmodule NarouUpdateNotifyBot.Template.Helper do
 
     map |> Enum.map(fn {k,v} -> "#{k}=#{v}" end) |> Enum.join("&")
   end
+
+  def add_opt_open_url_link(url), do: url <> "?openExternalBrowser=1"
 end
