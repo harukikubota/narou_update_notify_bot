@@ -1,0 +1,3 @@
+#!/bin/sh
+# $ lib/bin/db
+psql narou_update_notify_bot_repo
