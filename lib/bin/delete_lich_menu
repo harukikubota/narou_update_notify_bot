@@ -1,0 +1,5 @@
+#!/bin/bash
+# $1 rech_menu_id
+# $2 channel_access_token
+curl -X DELETE https://api.line.me/v2/bot/richmenu/$1 \
+-H "Authorization: Bearer $2"
