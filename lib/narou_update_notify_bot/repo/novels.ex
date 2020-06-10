@@ -1,7 +1,7 @@
 defmodule NarouUpdateNotifyBot.Repo.Novels do
   import Ecto.Query
   alias NarouUpdateNotifyBot.Repo
-  alias Repo.NovelEpisodes
+  alias Repo.{Util, NovelEpisodes}
   alias NarouUpdateNotifyBot.Entity.{
     Novel,
     Writer,
@@ -53,10 +53,10 @@ defmodule NarouUpdateNotifyBot.Repo.Novels do
   def find_by_ncode(ncode) do
     from(
       n in Novel,
-      join: w  in Writer        , on: n.writer_id == w.id,
+      join: w  in Writer , on: n.writer_id == w.id,
       join: ne in subquery(NovelEpisodes.novel_last_episodes_query),
       on: ne.novel_id == n.id,
-      where: n.ncode == ^ncode,
+      where: n.ncode == ^ncode and n.remote_deleted == false,
       select: %{
         id: n.id, ncode: n.ncode, title: n.title,
         writer_name: w.name, writer_id: n.writer_id,
@@ -74,18 +74,15 @@ defmodule NarouUpdateNotifyBot.Repo.Novels do
       true ->
         case Repo.Narou.find_by_ncode(ncode, [:ga, :u, :t, :gl]) do
           {:ok, %{general_all_no: episode_id, title: title, userid: remote_writer_id, general_lastup: general_lastup}} ->
-            novel = create(%{ncode: ncode, title: title})
-
-            Ecto.build_assoc(novel, :episodes, %{episode_id: episode_id, remote_created_at: general_lastup})
-            |> Helper.format_jpdate_to_utc(:remote_created_at)
-            |> Repo.insert!
-
             {:ok, writer} = Repo.Writers.find_or_create_by(remote_writer_id)
 
-            {:ok, tmp} = Ecto.Changeset.change(novel, %{writer_id: writer.id})
-            |> Repo.update
+            novel = create(%{ncode: ncode, title: title, writer_id: writer.id})
 
-            {:ok, find_by_ncode(tmp.ncode)}
+            %{novel_id: novel.id, episode_id: episode_id, remote_created_at: general_lastup}
+            |> Helper.format_jpdate_to_utc(:remote_created_at)
+            |> NovelEpisodes.create()
+
+            {:ok, find_by_ncode(novel.ncode)}
 
           {:no_data} -> {:no_data}
           {_, _}     -> {:error}
@@ -93,8 +90,32 @@ defmodule NarouUpdateNotifyBot.Repo.Novels do
     end
   end
 
-  def create(%{ncode: ncode, title: title}) do
-    %Novel{} |> Map.merge(%{title: title, ncode: ncode}) |> Repo.insert!
+  def create(param) do
+    %Novel{} |> Map.merge(param) |> Repo.insert!
+  end
+
+  def create_with_assoc_episode(%{ncode: ncode, title: title, writer_id: writer_id, episode_id: episode_id, remote_created_at: remote_created_at}) do
+    novel = create(%{ncode: ncode, title: title, writer_id: writer_id})
+
+    %{novel_id: novel.id, episode_id: episode_id, remote_created_at: remote_created_at}
+    |> Helper.format_jpdate_to_utc(:remote_created_at)
+    |> NovelEpisodes.create()
+
+    novel
+  end
+
+  def create_for_new_novel(%{ncode: ncode, title: title, writer_id: writer_id, remote_created_at: remote_created_at}) do
+    novel = create(%{ncode: ncode, title: title, writer_id: writer_id})
+
+    %{novel_id: novel.id, episode_id: 1, remote_created_at: remote_created_at}
+    |> Helper.format_jpdate_to_utc(:remote_created_at)
+    |> NovelEpisodes.create()
+
+    novel
+  end
+
+  def delete(id) do
+    find(id) |> Util.exec_delete()
   end
 
   def records_for_fetch() do

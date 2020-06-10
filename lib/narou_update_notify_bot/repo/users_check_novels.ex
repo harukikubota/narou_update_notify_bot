@@ -1,7 +1,7 @@
 defmodule NarouUpdateNotifyBot.Repo.UsersCheckNovels do
   alias NarouUpdateNotifyBot.Repo
   alias NarouUpdateNotifyBot.Repo.Novels
-  alias NarouUpdateNotifyBot.Entity.UserCheckNovel
+  alias NarouUpdateNotifyBot.Entity.{User, UserCheckNovel}
   import Ecto.Query
 
   def registered?(user_id, novel_id, type) do
@@ -30,6 +30,12 @@ defmodule NarouUpdateNotifyBot.Repo.UsersCheckNovels do
     from(UserCheckNovel, where: [user_id: ^user_id, novel_id: ^novel_id]) |> Repo.delete_all
   end
 
+  def unlink_all(novel_id) do
+    users = all_users_who_have_registered_novel(novel_id)
+    Enum.each(users, &(unlink_to(&1, novel_id)))
+    users
+  end
+
   def find(user_id, novel_id, type) do
     type = to_string(type)
     from(UserCheckNovel, where: [user_id: ^user_id, novel_id: ^novel_id, type: ^type]) |> first() |> Repo.one()
@@ -55,6 +61,15 @@ defmodule NarouUpdateNotifyBot.Repo.UsersCheckNovels do
     else
       {:error}
     end
+  end
 
+  def all_users_who_have_registered_novel(novel_id) do
+    from(
+      uc in UserCheckNovel,
+      join: u in User, on: uc.user_id == u.id,
+      where: uc.novel_id == ^novel_id and u.enabled == true,
+      select: u.id
+    )
+    |> Repo.all
   end
 end

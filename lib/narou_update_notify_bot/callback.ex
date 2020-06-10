@@ -12,7 +12,7 @@ defmodule NarouUpdateNotifyBot.Callback do
         with %{"writer_id" => writer_id}
           <- Regex.named_captures(Util.Constant.writer_regex(), message)
         do
-          invoke([:writer, :receive_writer_url], Map.merge(info, %{writer_id: writer_id}))
+          invoke([:writer, :receive_writer_url], Map.merge(info, %{writer_id: String.to_integer(writer_id)}))
         else
           _ -> default(info)
         end

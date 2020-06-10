@@ -14,3 +14,5 @@ config :line_bot,
   skip_validation: false
 
 config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
+
+config :logger, level: if Mix.env == :test, do: :error, else: :debug
