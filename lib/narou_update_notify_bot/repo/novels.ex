@@ -76,11 +76,7 @@ defmodule NarouUpdateNotifyBot.Repo.Novels do
           {:ok, %{general_all_no: episode_id, title: title, userid: remote_writer_id, general_lastup: general_lastup}} ->
             {:ok, writer} = Repo.Writers.find_or_create_by(remote_writer_id)
 
-            novel = create(%{ncode: ncode, title: title, writer_id: writer.id})
-
-            %{novel_id: novel.id, episode_id: episode_id, remote_created_at: general_lastup}
-            |> Helper.format_jpdate_to_utc(:remote_created_at)
-            |> NovelEpisodes.create()
+            novel = create_with_assoc_episode(%{ncode: ncode, title: title, writer_id: writer.id, remote_created_at: general_lastup, episode_id: episode_id})
 
             {:ok, find_by_ncode(novel.ncode)}
 
@@ -98,17 +94,6 @@ defmodule NarouUpdateNotifyBot.Repo.Novels do
     novel = create(%{ncode: ncode, title: title, writer_id: writer_id})
 
     %{novel_id: novel.id, episode_id: episode_id, remote_created_at: remote_created_at}
-    |> Helper.format_jpdate_to_utc(:remote_created_at)
-    |> NovelEpisodes.create()
-
-    novel
-  end
-
-  def create_for_new_novel(%{ncode: ncode, title: title, writer_id: writer_id, remote_created_at: remote_created_at}) do
-    novel = create(%{ncode: ncode, title: title, writer_id: writer_id})
-
-    %{novel_id: novel.id, episode_id: 1, remote_created_at: remote_created_at}
-    |> Helper.format_jpdate_to_utc(:remote_created_at)
     |> NovelEpisodes.create()
 
     novel

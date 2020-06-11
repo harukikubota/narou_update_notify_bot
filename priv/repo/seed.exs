@@ -1,4 +1,4 @@
-#mix ecto.drop && mix ecto.create && mix ecto.migrate && mi
+#mix ecto.drop && mix ecto.create && mix ecto.migrate && mix run priv/repo/seed.exs
 defmodule NarouUpdateNotifyBot.Seed do
   import Ecto.Query
   alias NarouUpdateNotifyBot.Repo
@@ -16,7 +16,7 @@ defmodule NarouUpdateNotifyBot.Seed do
   }
 
   def main do
-    setup
+    setup()
     create_sfo_histries_date(1)
     delete_novel_leatest_episode(1)
     create_dummy_and_link(1)
@@ -69,24 +69,20 @@ defmodule NarouUpdateNotifyBot.Seed do
   def create_sfo_histries_date(novel_id) do
     sfo_episode_histries =
       [
-        {20,"05","13","11","01"},
-        {20,"05","17","18","56"},
-        {20,"05","25","13","25"},
-        {20,"05","27","19","00"},
-        {20,"05","27","19","56"},
-        {20,"05","27","21","03"},
-        {20,"05","29","16","50"},
-        {20,"06","01","14","49"},
-        {20,"06","03","14","19"},
-        {20,"06","05","20","51"},
+        {20,"05","13","02","01"},
+        {20,"05","17","01","56"},
+        {20,"05","25","04","25"},
+        {20,"05","27","10","00"},
+        {20,"05","27","10","56"},
+        {20,"05","27","12","03"},
+        {20,"05","29","07","50"},
+        {20,"06","01","05","49"},
+        {20,"06","03","05","19"},
+        {20,"06","05","11","51"},
       ]
 
     sfo_episode_histries
-    |> Enum.map(fn {y, m, d, h, mi} ->
-      DateTime.from_iso8601("#{2000 + y}-#{m}-#{d} #{h}:#{mi}:00Z")
-      |> elem(1)
-      |> DateTime.add(3600 * -9)
-    end)
+    |> Enum.map(fn {y, m, d, h, mi} -> "#{2000 + y}-#{m}-#{d} #{h}:#{mi}:00" end)
     |> Enum.with_index(706)
     |> Enum.each(fn {created, episode_id} ->
       NovelEpisodes.create(%{novel_id: novel_id, episode_id: episode_id, remote_created_at: created})
@@ -98,8 +94,8 @@ defmodule NarouUpdateNotifyBot.Seed do
   end
 
   def create_dummy_and_link(user_id, attr \\ %{}) do
-    dummy_novel = Novels.create_for_new_novel(
-      %{ncode: "n9999aaa", title: "dummy", writer_id: 1, remote_created_at: "2020-05-13 02:01:00"} |> Map.merge(attr)
+    dummy_novel = Novels.create_with_assoc_episode(
+      %{ncode: "n9999aaa", title: "dummy", writer_id: 1, remote_created_at: "2020-05-13 02:01:00", episode_id: 1} |> Map.merge(attr)
     )
 
     UsersCheckNovels.link_to(user_id, dummy_novel.id)
@@ -113,7 +109,7 @@ defmodule NarouUpdateNotifyBot.Seed do
       %{type: :delete_novel_episode, novel_episode_id: 1},
       %{type: :delete_writer,        writer_id:        1}
     ]
-    |> Map.merge(%{user_id: user_id})
+    |> Enum.map(&(Map.merge(&1, %{user_id: user_id})))
     |> Enum.each(&NotificationFacts.create/1)
   end
 end

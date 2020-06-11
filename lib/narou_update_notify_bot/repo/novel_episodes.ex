@@ -2,6 +2,7 @@ defmodule NarouUpdateNotifyBot.Repo.NovelEpisodes do
   import Ecto.Query
   alias NarouUpdateNotifyBot.Repo
   alias Repo.Util
+  alias NarouUpdateNotifyBot.Entity.Helper
   alias NarouUpdateNotifyBot.Entity.NovelEpisode
 
   def novel_last_episodes_query do
@@ -24,6 +25,7 @@ defmodule NarouUpdateNotifyBot.Repo.NovelEpisodes do
   def create(%{novel_id: novel_id, episode_id: episode_id, remote_created_at: created}) do
     %NovelEpisode{}
     |> Map.merge(%{novel_id: novel_id, episode_id: episode_id, remote_created_at: created})
+    |> Helper.format_jpdate_to_utc(:remote_created_at)
     |> Repo.insert!
   end
 

@@ -17,8 +17,8 @@ defmodule NarouUpdateNotifyBot.Repo.Writers do
       false -> {:ok, record}
       true ->
         case Repo.Narou.find_by_writer_id(remote_id) do
-          %{novel_cnt: novel_count, name: name} ->
-            writer = create(%{novel_count: novel_count, name: name, remote_id: remote_id})
+          %{name: name} ->
+            writer = create(%{name: name, remote_id: remote_id})
 
             spawn(Job, :exec, [writer.id])
 
@@ -82,10 +82,11 @@ defmodule NarouUpdateNotifyBot.Repo.Writers do
   def records_to_fetch() do
     from(
       w in Writer,
-      where: w.remote_deleted == false and w.id == 5,
-      order_by: w.remote_id,
-      select: %{remote_id: w.remote_id, novel_count: w.novel_count}
-    )
+      join: n in Novel,
+      on: w.id == n.writer_id,
+      where: n.remote_deleted == false,
+      select: %{remote_id: w.remote_id, novel_count: count(n.id)},
+      group_by: w.id)
     |> Repo.all
   end
 
@@ -96,7 +97,7 @@ defmodule NarouUpdateNotifyBot.Repo.Writers do
       on: w.id == n.writer_id,
       where: w.remote_id in ^remote_ids and n.remote_deleted == false,
       order_by: w.remote_id,
-      preload: [novels: {n, episodes: ^NovelEpisodes.novel_last_episodes_query}]
+      preload: [novels: {n, last_episode: ^NovelEpisodes.novel_last_episodes_query}]
     )
     |> Repo.all()
   end

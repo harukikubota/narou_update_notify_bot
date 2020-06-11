@@ -51,7 +51,7 @@ defmodule NarouUpdateNotifyBot.JobService.FetchWritersAndCreateNotificationFacts
     fetch_facts |> Enum.group_by(&(&1.writer_remote_id))
   end
 
-  def tagging_with(remote_writer_facts, local_writers) do
+  defp tagging_with(remote_writer_facts, local_writers) do
     get_remote_data = fn remote_id -> Map.get(remote_writer_facts, remote_id) end
     local_writers
     |> Enum.map(fn writer ->
@@ -59,7 +59,7 @@ defmodule NarouUpdateNotifyBot.JobService.FetchWritersAndCreateNotificationFacts
 
       cond do
         is_nil(remote_data) ->
-          [tagged_fact(:writer_deleted, writer, nil)]
+          [tagged_fact(:delete_writer, writer, nil)]
         true ->
           (Enum.map(writer.novels, &(&1.ncode)) ++ Enum.map(remote_data, &(&1.ncode)))
           |> Enum.uniq
@@ -75,10 +75,10 @@ defmodule NarouUpdateNotifyBot.JobService.FetchWritersAndCreateNotificationFacts
 
   defp tagging_novel(local, remote) do
     cond do
-      is_nil(remote) -> {:novel_deleted, local, nil}
-      is_nil(local)  -> {:new_post_novel, nil, remote}
+      is_nil(remote) -> tagged_fact :delete_novel, local, nil
+      is_nil(local)  -> tagged_fact :new_post_novel, nil, remote
       true           ->
-        local_episode_id = hd(local.episodes).episode_id
+        local_episode_id = local.last_episode.episode_id
 
         tag = cond do
           local_episode_id <  remote.episode_id -> :novel_new_episode

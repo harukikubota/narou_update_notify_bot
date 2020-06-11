@@ -6,7 +6,6 @@ defmodule NarouUpdateNotifyBot.Entity.Writer do
   schema "writers" do
     field :remote_id, :integer
     field :name, :string, null: false
-    field :novel_count, :integer, null: false
     field :remote_deleted, :boolean, default: false
     field :remote_deleted_at, :utc_datetime
 

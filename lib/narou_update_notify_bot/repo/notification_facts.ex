@@ -29,17 +29,6 @@ defmodule NarouUpdateNotifyBot.Repo.NotificationFacts do
         writer: w
       ]
     ) |> Repo.all()
-    #select: {n0, n1, n2, n3, n4, n5}
-  end
-
-  def all(:novel_new_episode) do
-    from(
-      n0 in NotificationInfo,
-      left_join: n1 in assoc(n0, :novel_episode), on: n0.novel_episode_id == n1.id,
-      left_join: n2 in assoc(n1, :novel),         on: n1.novel_id == n2.id,
-      preload: [novel_episode: {n1, novel: n2}]
-    )
-    |> Repo.all()
   end
 
   # params = %{novel_episode_id: 2, type: :novel_new_episode, user_id: 1}

@@ -9,22 +9,18 @@ defmodule NarouUpdateNotifyBot.JobService.ApplyRemoteData do
     NotificationFacts
   }
 
-#  def start() do
-#    receive do
-#      {:novel_update,     %{local: local, remote: remote}} -> exec(:novel_new_episode   , local, remote)
-#      {:new_post_novel,   %{local: local, remote: remote}} -> exec(:new_post_novel      , local, remote)
-#      {:episode_delete,   %{local: local, remote: remote}} -> exec(:delete_novel_episode, local, remote)
-#      {:novel_deleted,    %{local: local}}                 -> exec(:delete_novel        , local)
-#      {:writer_deleted,   %{local: local}}                 -> exec(:delete_writer       , local)
-#      {:novel_no_update,  _} -> nil
-#      {:writer_no_update, _} -> nil
-#    end
-#  end
+  # TODO checkseet
+  # - novel_new_episode ok
+  # - delete_novel_episode n
+  # - new_post_novel n
+  # - delete_writer n
+  # - delete_novel ok
 
   def start(arg) do
     case arg do
       {:novel_no_update, _}                   -> nil
       {type, %{local: local, remote: remote}} -> exec(type, local, remote)
+      :ok
     end
   end
 
@@ -39,18 +35,18 @@ defmodule NarouUpdateNotifyBot.JobService.ApplyRemoteData do
   end
 
   def update_local_data(:novel_new_episode, local, remote) do
-    Range.new(local.episodes.episode_id + 1, remote.episode_id)
+    Range.new(local.last_episode.episode_id + 1, remote.episode_id)
     |> Enum.map(&(NovelEpisodes.create(%{novel_id: local.id, episode_id: &1, remote_created_at: remote.remote_created_at})))
   end
 
   def update_local_data(:new_post_novel, local, remote) do
-    Novels.create_for_new_novel(
-      %{ncode: remote.ncode, title: remote.title, writer_id: local.id, remote_created_at: remote.remote_created_at}
+    Novels.create_with_assoc_episode(
+      %{ncode: remote.ncode, title: remote.title, writer_id: local.id, remote_created_at: remote.remote_created_at, episode_id: 1}
     )
   end
 
   def update_local_data(:delete_novel_episode, local, remote) do
-    Range.new(remote.episode_id + 1, local.episodes.episode_id)
+    Range.new(remote.episode_id + 1, local.last_episode.episode_id)
     |> Enum.map(&(NovelEpisodes.delete_by_novel(local.id, &1)))
   end
 

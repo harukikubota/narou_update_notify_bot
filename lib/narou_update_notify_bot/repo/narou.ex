@@ -43,9 +43,8 @@ defmodule NarouUpdateNotifyBot.Repo.Narou do
 
   @doc """
   ユーザを一件検索する。
-  デフォルト引数：ユーザID、小説投稿数、名前を取得する。
   """
-  def find_by_writer_id(writer_id, cols \\ [:novel_cnt, :name]) do
+  def find_by_writer_id(writer_id, cols \\ [:name]) do
     case _init(:user) |> select(cols) |> where(userid: writer_id) |> _exec! do
       {:ok, _, [result]} -> result
       {:no_data} -> {:no_data}

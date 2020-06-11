@@ -1,4 +1,5 @@
 defmodule NarouUpdateNotifyBot.Entity.Helper do
+  require Logger
   def format_jpdate_to_utc(entity, key) do
     entity |> Map.update!(key, &iso8601_to_date_time/1)
   end
