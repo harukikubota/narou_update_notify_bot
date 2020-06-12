@@ -1,6 +1,6 @@
 defmodule NarouUpdateNotifyBot.Repo.UsersCheckWriters do
   alias NarouUpdateNotifyBot.Repo
-  alias NarouUpdateNotifyBot.Entity.{User, UserCheckWriter}
+  alias NarouUpdateNotifyBot.Entity.{User, Novel, UserCheckWriter, UserCheckNovel}
   import Ecto.Query
 
   def registered?(user_id, writer_id) do
@@ -27,11 +27,25 @@ defmodule NarouUpdateNotifyBot.Repo.UsersCheckWriters do
 
   def all_users_who_have_registered_writer(writer_id) do
     from(
-      uc in UserCheckWriter,
-      join: u in User, on: uc.user_id == u.id,
-      where: uc.writer_id == ^writer_id and u.enabled == true,
-      select: u.id
-    )
+      u in User,
+        join: uw in UserCheckWriter, on: u.id == uw.user_id,
+        where: uw.writer_id == ^writer_id,
+        distinct: u.id,
+        select:   u.id
+      )
+    |> Repo.all
+  end
+
+  def all_users_who_have_registered_writer(:for_delete, writer_id) do
+    from(
+      u in User,
+        join: uw in UserCheckWriter, on: u.id == uw.user_id,
+        join: un in UserCheckNovel,  on: u.id == un.user_id,
+        join: n  in Novel,           on: n.id == un.novel_id,
+        where: uw.writer_id == ^writer_id or n.writer_id == ^writer_id,
+        distinct: u.id,
+        select:   u.id
+      )
     |> Repo.all
   end
 end

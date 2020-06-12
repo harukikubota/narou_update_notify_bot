@@ -51,10 +51,6 @@ defmodule NarouUpdateNotifyBot.Template.Writer.ReceiveWriterUrl do
                   color: "#666666",
                   size:  :md,
                   text:  dao.writer.name
-                },
-                %F.Text{
-                  align: :center,
-                  text:  "投稿数 #{dao.writer.novel_count}"
                 }
               ]
             }

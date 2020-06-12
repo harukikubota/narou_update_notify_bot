@@ -12,14 +12,18 @@ defmodule NarouUpdateNotifyBot.Seed do
     NotificationFacts
   }
   alias NarouUpdateNotifyBot.Entity.{
+    Novel,
     NovelEpisode
   }
 
   def main do
     setup()
     create_sfo_histries_date(1)
+    create_dummy_writer_and_link()
+    create_dummy_new_episode(2)
     delete_novel_leatest_episode(1)
     create_dummy_and_link(1)
+    delete_for_new_post_novel(2)
   end
 
   def create_many_writers do
@@ -46,6 +50,32 @@ defmodule NarouUpdateNotifyBot.Seed do
     remote_ids |> Enum.each(&Writers.find_or_create_by/1)
   end
 
+  def create_dummy_new_episode(novel_id) do
+    target = from(
+      n in Novel,
+      where: n.id == ^novel_id,
+      limit: 1,
+      preload: [last_episode: ^NovelEpisodes.novel_last_episodes_query])
+    |> Repo.one
+
+    NovelEpisodes.create(
+      %{
+        novel_id: target.id,
+        episode_id: target.last_episode.episode_id + 1,
+        remote_created_at: "2020-06-05 01:00:00"}
+    )
+  end
+
+  def create_dummy_writer_and_link() do
+    writer = Writers.create(%{remote_id: 9999999, name: "だみ太郎"})
+    novel = Novels.create_with_assoc_episode(
+      %{ncode: "n9999aab", title: "だみ太郎の冒険", writer_id: writer.id, remote_created_at: "2020-05-13 02:01:00", episode_id: 1}
+    )
+
+    UsersCheckWriters.link_to(1, writer.id)
+    UsersCheckNovels.link_to(2, novel.id)
+  end
+
   def setup do
     user = Users.new_user "Uc043bb4602f875df9d19e266c67d0f57"
     tuser = Users.new_user "hogehoge"
@@ -60,8 +90,10 @@ defmodule NarouUpdateNotifyBot.Seed do
     UsersCheckNovels.link_to(tuser.id, sfo.id)
     UsersCheckNovels.link_to(user.id, rzr.id, 1)
     UsersCheckNovels.link_to(tuser.id, tsr.id)
+    UsersCheckNovels.link_to(tuser.id, rzr.id)
 
     UsersCheckWriters.link_to(user.id, sfo.writer_id)
+    UsersCheckWriters.link_to(tuser.id, sfo.writer_id)
     UsersCheckWriters.link_to(user.id, rzr.writer_id)
     UsersCheckWriters.link_to(tuser.id, tsr.writer_id)
   end
@@ -112,7 +144,21 @@ defmodule NarouUpdateNotifyBot.Seed do
     |> Enum.map(&(Map.merge(&1, %{user_id: user_id})))
     |> Enum.each(&NotificationFacts.create/1)
   end
+
+  def delete_for_new_post_novel(writer_id) do
+    IO.puts("start delete_for_new_post_novel")
+    target = from(
+      n in Novel,
+      where: n.writer_id == ^writer_id,
+      limit: 1,
+      order_by: [desc: n.ncode],
+      preload: [last_episode: ^NovelEpisodes.novel_last_episodes_query])
+    |> Repo.one
+
+    [target.last_episode, target]
+    |> Enum.each(&Repo.delete/1)
+  end
 end
 
 NarouUpdateNotifyBot.Seed.main()
-:timer.sleep(10000)
+:timer.sleep(7000)

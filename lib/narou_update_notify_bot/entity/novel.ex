@@ -11,10 +11,10 @@ defmodule NarouUpdateNotifyBot.Entity.Novel do
 
     timestamps()
 
-    belongs_to   :writer,   Writer
+    belongs_to   :writer,       Writer
     has_one      :last_episode, NovelEpisode
-    has_many     :episodes, NovelEpisode
-    many_to_many :users,    User, join_through: UserCheckNovel
+    has_many     :episodes,     NovelEpisode
+    many_to_many :users,        User, join_through: UserCheckNovel
   end
 
   def changeset(novel, attrs) do

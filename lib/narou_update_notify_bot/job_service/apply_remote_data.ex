@@ -11,9 +11,10 @@ defmodule NarouUpdateNotifyBot.JobService.ApplyRemoteData do
 
   # TODO checkseet
   # - novel_new_episode ok
-  # - delete_novel_episode n
-  # - new_post_novel n
+  # - delete_novel_episode ok
+  # - new_post_novel ok
   # - delete_writer n
+  #     FIXME
   # - delete_novel ok
 
   def start(arg) do
@@ -40,9 +41,11 @@ defmodule NarouUpdateNotifyBot.JobService.ApplyRemoteData do
   end
 
   def update_local_data(:new_post_novel, local, remote) do
-    Novels.create_with_assoc_episode(
-      %{ncode: remote.ncode, title: remote.title, writer_id: local.id, remote_created_at: remote.remote_created_at, episode_id: 1}
+    writer = Writers.find_by_remote_id remote.writer_remote_id
+    novel  = Novels.create_with_assoc_episode(
+      %{ncode: remote.ncode, title: remote.title, writer_id: writer.id, remote_created_at: remote.remote_created_at, episode_id: 1}
     )
+    %{writer: writer, novel: novel}
   end
 
   def update_local_data(:delete_novel_episode, local, remote) do
@@ -57,6 +60,9 @@ defmodule NarouUpdateNotifyBot.JobService.ApplyRemoteData do
 
   def update_local_data(:delete_writer, local, _remote) do
     Writers.delete(local.id)
+    # FIXME
+    # ここでアンリンクすると、通知データの作成対象が小説登録しているユーザのみになってしまう。
+    # なので、分割しているメソッドをまとめるのがいいかも
     UsersCheckWriters.unlink_all(local.id)
   end
 
@@ -72,11 +78,11 @@ defmodule NarouUpdateNotifyBot.JobService.ApplyRemoteData do
     end)
   end
 
-  def create_notification_data(result, :new_post_novel, local, _) do
-    UsersCheckWriters.all_users_who_have_registered_writer(local.id)
+  def create_notification_data(%{novel: novel, writer: writer}, :new_post_novel, _, remote) do
+    UsersCheckWriters.all_users_who_have_registered_writer(writer.id)
     |> Enum.each(fn user_id ->
       NotificationFacts.create(
-        %{type: :new_post_novel, user_id: user_id, novel_id: result.id}
+        %{type: :new_post_novel, user_id: user_id, novel_id: novel.id}
       )
     end)
   end
@@ -88,14 +94,15 @@ defmodule NarouUpdateNotifyBot.JobService.ApplyRemoteData do
   end
 
   def create_notification_data(result, :delete_writer, local, _) do
-    Enum.each(result, &(NotificationFacts.create(
+    UsersCheckWriters.all_users_who_have_registered_writer(:for_delete, local.id)
+    |> Enum.each(&(NotificationFacts.create(
       %{type: :delete_writer, user_id: &1, writer_id: local.id}
     )))
   end
 
   def create_notification_data(results, :delete_novel_episode, _, _) do
     Enum.each(results, fn {:ok, result} ->
-      Enum.each(UsersCheckWriters.all_users_who_have_registered_writer(result.novel_id),
+      Enum.each(UsersCheckNovels.all_users_who_have_registered_novel(result.novel_id),
         &(NotificationFacts.create(
         %{type: :delete_novel_episode, user_id: &1, novel_episode_id: result.id}
       ))
