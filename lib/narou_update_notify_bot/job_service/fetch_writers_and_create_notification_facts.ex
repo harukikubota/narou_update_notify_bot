@@ -9,7 +9,7 @@ defmodule NarouUpdateNotifyBot.JobService.FetchWritersAndCreateNotificationFacts
   def exec() do
     fetch_target_writers()
     |> grouping_writer_ids_to_fetch_data()
-    |> Enum.map(&fetch_and_apply_remote_data/1)
+    |> Enum.each(&fetch_and_apply_remote_data/1)
   end
 
   defp fetch_target_writers(), do: Repo.Writers.records_to_fetch()
@@ -35,16 +35,17 @@ defmodule NarouUpdateNotifyBot.JobService.FetchWritersAndCreateNotificationFacts
 
     [{group_id, target.remote_id}] ++ add_index(tail, group_id, group_novel_cnt)
   end
-
   defp add_index([], _, _), do: []
 
   defp fetch_and_apply_remote_data(writer_ids) do
-    writer_ids
-    |> Repo.Narou.find_by_userid([:n, :t, :ga, :gl, :u])
-    |> format!()
-    |> grouping_writer()
-    |> tagging_with(load_writers(writer_ids))
-    |> Enum.map(&create_notification_facts/1)
+    spawn(fn ->
+      writer_ids
+      |> Repo.Narou.find_by_userid([:n, :t, :ga, :gl, :u])
+      |> format!()
+      |> grouping_writer()
+      |> tagging_with(load_writers(writer_ids))
+      |> Enum.each(&create_notification_facts/1)
+    end)
   end
 
   defp grouping_writer(fetch_facts) do
@@ -92,11 +93,9 @@ defmodule NarouUpdateNotifyBot.JobService.FetchWritersAndCreateNotificationFacts
 
   defp tagged_fact(tag, local, remote), do: {tag, %{local: local, remote: remote}}
 
-  defp load_writers(writer_ids) do
-    Repo.Writers.find_by_ids_with_novels writer_ids
-  end
+  defp load_writers(writer_ids), do: Repo.Writers.find_by_ids_with_novels(writer_ids)
 
-  defp create_notification_facts(tagged_info), do: @child.start(tagged_info)
+  defp create_notification_facts(tagged_info), do: spawn(@child, :start, [tagged_info])
 
   defp format!({:ok, _, fetch_facts}) do
     fetch_facts
@@ -110,34 +109,4 @@ defmodule NarouUpdateNotifyBot.JobService.FetchWritersAndCreateNotificationFacts
       }
     end)
   end
-#
-##  defp fork_child(local, remote) when is_map(local) and is_map(remote) do
-##    child_pid = child()
-##    message =
-##      cond do
-##        local.episode_id >  remote.episode_id -> :novel_update
-##        local.episode_id <  remote.episode_id -> :episode_delete
-##        local.episode_id == remote.episode_id -> :novel_no_update
-##      end
-##
-##    send child_pid, {message, %{local: local, remote: remote}}
-##  end
-##
-##  defp fork_child(local, nil) do
-##    child() |> send({:novel_deleted, %{local: local}})
-##  end
-##
-##  defp child(), do: spawn(@child, :start, [])
-#
-#  def fork_child(local, remote) do
-#    message =
-#      cond do
-#        is_nil(remote)                        -> :novel_deleted
-#        local.episode_id <  remote.episode_id -> :novel_update
-#        local.episode_id >  remote.episode_id -> :episode_delete
-#        local.episode_id == remote.episode_id -> :novel_no_update
-#      end
-#
-#    @child.start({message, %{local: local, remote: remote}})
-#  end
 end

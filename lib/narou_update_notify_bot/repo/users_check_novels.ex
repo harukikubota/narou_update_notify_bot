@@ -1,7 +1,7 @@
 defmodule NarouUpdateNotifyBot.Repo.UsersCheckNovels do
   alias NarouUpdateNotifyBot.Repo
   alias NarouUpdateNotifyBot.Repo.Novels
-  alias NarouUpdateNotifyBot.Entity.{User, UserCheckNovel}
+  alias NarouUpdateNotifyBot.Entity.{User, UserCheckNovel, Novel}
   import Ecto.Query
 
   def registered?(user_id, novel_id, type) do
@@ -31,9 +31,23 @@ defmodule NarouUpdateNotifyBot.Repo.UsersCheckNovels do
   end
 
   def unlink_all(novel_id) do
-    users = all_users_who_have_registered_novel(novel_id)
-    Enum.each(users, &(unlink_to(&1, novel_id)))
-    users
+    from(uc in UserCheckNovel, where: uc.user_id in ^all_users_who_have_registered_novel(novel_id) and uc.novel_id == ^novel_id)
+    |> Repo.delete_all
+  end
+
+  def unlink_all_by_writer_id(writer_id) do
+    from(
+      uc in UserCheckNovel,
+      where: uc.novel_id in subquery(
+        from(
+          uc in UserCheckNovel,
+          join: n in Novel, on: n.id == uc.novel_id,
+          where: n.writer_id == ^writer_id,
+          select: [:novel_id]
+        )
+      )
+    )
+    |> Repo.delete_all
   end
 
   def find(user_id, novel_id, type) do
