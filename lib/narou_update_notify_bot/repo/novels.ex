@@ -1,13 +1,15 @@
 defmodule NarouUpdateNotifyBot.Repo.Novels do
   import Ecto.Query
   alias NarouUpdateNotifyBot.Repo
-  alias Repo.{Util, NovelEpisodes}
+  alias Repo.{Util, NovelEpisodes, UsersCheckNovels}
   alias NarouUpdateNotifyBot.Entity.{
     Novel,
     Writer,
     UserCheckNovel,
+    NotificationInfo,
     Helper
   }
+  require Logger
 
   @spec all() :: list(map) | []
   def all() do
@@ -19,33 +21,71 @@ defmodule NarouUpdateNotifyBot.Repo.Novels do
     Repo.get(Novel, id)
   end
 
-  def novel_detail(type, user_id), do: _novel_detail(type, user_id) |> Repo.all
-  def novel_detail(type, user_id, novel_id) do
-    _novel_detail(type, user_id)
-    |> where([n,_,_,_], n.id == ^novel_id)
-    |> first()
-    |> Repo.one
+  #def novel_detail(type, user_id), do: _novel_detail(type, user_id) |> Repo.all
+  #def novel_detail(type, user_id, novel_id) do
+  #  _novel_detail(type, user_id)
+  #  |> where([n,_,_,_], n.id == ^novel_id)
+  #  |> first()
+  #  |> Repo.one
+  #end
+
+  #defp _novel_detail(type, user_id) do
+  #  novel_detail_query(type, user_id)
+  #  |> novel_detail_additional_columns(type)
+  #end
+
+  def novel_detail(:all, type, user_id) do
+    novel_detail_query(:registerd, user_id)
+    |> where([user_check: u], u.type == ^type)
+    |> Repo.all
   end
 
-  defp _novel_detail(type, user_id) do
-    novel_detail_query(type, user_id)
-    |> novel_detail_additional_columns(type)
+  def novel_detail(:one, user_id, novel_id) do
+    {user_register_status, query} = if UsersCheckNovels.registered?(user_id, novel_id) do
+      {:registered, novel_detail_query(:registerd, user_id)}
+    else
+      {:no_register, novel_detail_query(:no_register)}
+    end
+
+    record =
+      query
+      |> where([novels: n], n.id == ^novel_id)
+      |> first()
+      |> Repo.one
+
+    {user_register_status, record}
   end
 
-  defp novel_detail_query(type, user_id) do
+  defp novel_detail_query(:registerd, user_id) do
+    from [n, w] in novel_detail_query(:no_register),
+      join: ucn in UserCheckNovel,
+      as: :user_check,
+      on: ucn.novel_id == n.id,
+      where: ucn.user_id == ^user_id,
+      preload: [check_user: ucn]
+  end
+
+  defp novel_detail_query(:no_register) do
     from n in Novel,
-      join: uc in UserCheckNovel, on: n.id == uc.novel_id,
-      join: w  in Writer        , on: n.writer_id == w.id,
-      join: ne in subquery(NovelEpisodes.novel_last_episodes_query),
-      on: ne.novel_id == n.id,
-      where: uc.type    == ^type,
-      where: uc.user_id == ^user_id,
-      select: %{
-        id: n.id, ncode: n.ncode, title: n.title,
-        writer_name: w.name, writer_id: n.writer_id,
-        episode_id: ne.episode_id, remote_created_at: ne.remote_created_at
-      }
+      as: :novels,
+      join: w in assoc(n, :writer), on: w.id == n.writer_id,
+      preload: [writer: w, last_episode: ^NovelEpisodes.novel_last_episodes_query]
   end
+
+#  defp novel_detail_query(type, user_id) do
+#    from n in Novel,
+#      join: uc in UserCheckNovel, on: n.id == uc.novel_id,
+#      join: w  in Writer        , on: n.writer_id == w.id,
+#      join: ne in subquery(NovelEpisodes.novel_last_episodes_query),
+#      on: ne.novel_id == n.id,
+#      where: uc.type    == ^type,
+#      where: uc.user_id == ^user_id,
+#      select: %{
+#        id: n.id, ncode: n.ncode, title: n.title,
+#        writer_name: w.name, writer_id: n.writer_id,
+#        episode_id: ne.episode_id, remote_created_at: ne.remote_created_at
+#      }
+#  end
 
   defp novel_detail_additional_columns(q, "update_notify"), do: q |> select_merge([_,uc,_,_], %{do_notify: uc.do_notify})
   defp novel_detail_additional_columns(q, "read_later"),    do: q |> select_merge([_,uc,_,_], %{restart_episode_id: uc.restart_episode_id, restart_index_updated_at: uc.updated_at})

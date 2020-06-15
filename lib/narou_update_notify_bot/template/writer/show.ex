@@ -81,8 +81,7 @@ defmodule NarouUpdateNotifyBot.Template.Writer.Show do
             label: "• #{novel.title}",
             data: postback_data(%{
               action: "/novel/show",
-              novel_id: novel.id,
-              type: novel.type
+              novel_id: novel.id
             })
           }
         }

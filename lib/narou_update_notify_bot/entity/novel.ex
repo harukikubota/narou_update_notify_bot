@@ -13,6 +13,7 @@ defmodule NarouUpdateNotifyBot.Entity.Novel do
 
     belongs_to   :writer,       Writer
     has_one      :last_episode, NovelEpisode
+    has_one      :check_user,   UserCheckNovel
     has_many     :episodes,     NovelEpisode
     many_to_many :users,        User, join_through: UserCheckNovel
   end

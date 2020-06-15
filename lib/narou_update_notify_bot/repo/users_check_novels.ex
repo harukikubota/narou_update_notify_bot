@@ -4,8 +4,13 @@ defmodule NarouUpdateNotifyBot.Repo.UsersCheckNovels do
   alias NarouUpdateNotifyBot.Entity.{User, UserCheckNovel, Novel}
   import Ecto.Query
 
+
+  def registered?(user_id, novel_id) do
+    from(UserCheckNovel, where: [user_id: ^user_id, novel_id: ^novel_id]) |> Repo.exists?
+  end
+
   def registered?(user_id, novel_id, type) do
-    !!(find(user_id, novel_id, type))
+    from(UserCheckNovel, where: [user_id: ^user_id, novel_id: ^novel_id, type: ^type]) |> Repo.exists?
   end
 
   def user_register_count(type, user_id) do
@@ -71,7 +76,7 @@ defmodule NarouUpdateNotifyBot.Repo.UsersCheckNovels do
         where: n.user_id == ^user_id and n.novel_id == ^novel_id
       )
       |> Repo.update_all(set: set)
-      {:ok, Novels.novel_detail("update_notify", user_id, novel_id)}
+      {:ok}
     else
       {:error}
     end

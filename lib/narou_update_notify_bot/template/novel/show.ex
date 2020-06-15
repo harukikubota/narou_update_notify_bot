@@ -12,8 +12,6 @@ defmodule NarouUpdateNotifyBot.Template.Novel.Show do
     }
   end
 
-  def render(:no_data, _), do: %M.Text{ text: "登録されていない小説です。"}
-
   def template(dao) do
     %F.Bubble{
       header: header(dao.novel),
@@ -70,7 +68,7 @@ defmodule NarouUpdateNotifyBot.Template.Novel.Show do
         %F.Button{
           action: %M.Action.Postback{
             data: postback_data(%{action: "/writer/show", writer_id: novel.writer_id}),
-            label: novel.writer_name
+            label: novel.writer.name
           }
         }
       ]
@@ -81,15 +79,16 @@ defmodule NarouUpdateNotifyBot.Template.Novel.Show do
     %F.Box{
       layout: :horizontal,
       contents: [
-        %F.Text{ text: "最新話 #{novel.episode_id}" ,
+        %F.Text{
+          text: "最新話 #{novel.last_episode.episode_id}",
           action: %M.Action.URI{
-            uri: add_opt_open_url_link(NHelper.make_novel_url(novel.ncode, novel.episode_id))
+            uri: add_opt_open_url_link(NHelper.make_novel_url(novel.ncode, novel.last_episode.episode_id))
           },
           color: "#325b85",
           flex: 5
         },
         %F.Text{
-          text: format_date_yymmddhhmi(novel.remote_created_at),
+          text: format_date_yymmddhhmi(novel.last_episode.remote_created_at),
           flex: 7
         }
       ]
@@ -101,7 +100,7 @@ defmodule NarouUpdateNotifyBot.Template.Novel.Show do
       layout: :horizontal,
       contents: [
         %F.Text{
-          text: "#{novel.restart_episode_id}話  #{format_date_yymmddhhmi(novel.restart_index_updated_at)}",
+          text: "#{novel.check_user.restart_episode_id}話  #{format_date_yymmddhhmi(novel.check_user.updated_at)}",
           align: :center
         }
       ]
@@ -117,7 +116,7 @@ defmodule NarouUpdateNotifyBot.Template.Novel.Show do
 
   def footer_top_area("update_notify", novel) do
     contents =
-      if novel.do_notify do
+      if novel.check_user.do_notify do
         [button_show_update_history(novel.id)]
       else
         [button_show_update_history(novel.id),button_read_update_history(novel.id)]
@@ -135,7 +134,7 @@ defmodule NarouUpdateNotifyBot.Template.Novel.Show do
         %F.Button{
           action: %M.Action.Postback{
             data: postback_data(%{action: "/novel/switch_notification", novel_id: novel.id}),
-            label: "通知" <> NHelper.notification_flag_to_jp(!novel.do_notify)
+            label: "通知" <> NHelper.notification_flag_to_jp(!novel.check_user.do_notify)
           }
         },
         button_novel_delete(novel.id, "update_notify")
@@ -149,7 +148,7 @@ defmodule NarouUpdateNotifyBot.Template.Novel.Show do
       contents: [
         %F.Button{
           action: %M.Action.URI{
-            uri: add_opt_open_url_link(NHelper.make_novel_url(novel.ncode, novel.restart_episode_id)),
+            uri: add_opt_open_url_link(NHelper.make_novel_url(novel.ncode, novel.check_user.restart_episode_id)),
             label: "再開する"
           }
         },
