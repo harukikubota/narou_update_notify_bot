@@ -1,5 +1,11 @@
-*
-!*/
-
-!.gitignore
-!lib/*
+/_build/
+/deps/
+!/deps/line_bot
+/doc/
+/.elixir_ls
+erl_crash.dump
+*.ez
+/.vscode
+narou_update_notify_bot-*.tar
+/priv/static/
+.tool-versions
