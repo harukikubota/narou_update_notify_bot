@@ -68,13 +68,14 @@ defmodule NarouUpdateNotifyBot.Repo.NotificationFacts do
       left_join: ne in assoc(ni, :novel_episode),
       left_join: n in assoc(ne, :novel),
       where: ni.status == "user_unread" and n.id == ^novel_id and ni.user_id == ^user_id,
-      order_by: [ne.novel_id, ne.episode_id]
+      order_by: [ne.episode_id],
+      preload: [novel_episode: {ne, novel: n}]
     )
     |> Repo.all()
   end
 
   def user_unread_episode_count(user_id, novel_id) do
-    from(
+    count = from(
       ni in NotificationInfo,
       left_join: ne in assoc(ni, :novel_episode),
       left_join: n in assoc(ne, :novel),
@@ -84,6 +85,8 @@ defmodule NarouUpdateNotifyBot.Repo.NotificationFacts do
       select: count(ne.novel_id)
     )
     |> Repo.one()
+
+    count || 0
   end
 
   def update_status(update_target_fetch_query, status) do

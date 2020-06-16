@@ -45,7 +45,7 @@ defmodule NarouUpdateNotifyBot.Template.JobService.Notificate_data do
 
   def col_template(notification_facts) do
     %F{
-      altText: "登録小説一覧",
+      altText: "更新通知",
       contents: %F.Carousel{
         contents: Enum.map(notification_facts, &(template_for(&1.type, &1)))
       }

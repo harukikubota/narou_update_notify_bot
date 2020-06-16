@@ -97,7 +97,7 @@ defmodule NarouUpdateNotifyBot.Seed do
     #UsersCheckNovels.link_to(tuser.id, tsr.id)
     #UsersCheckNovels.link_to(tuser.id, rzr.id)
 
-    UsersCheckNovels.switch_notification(user.id, nmn.id)
+    UsersCheckNovels.switch_notification(user.id, sfo.id)
     UsersCheckNovels.switch_notification(user.id, mks.id)
 
     UsersCheckWriters.link_to(user.id, sfo.writer_id)

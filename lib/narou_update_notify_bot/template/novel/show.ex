@@ -119,7 +119,7 @@ defmodule NarouUpdateNotifyBot.Template.Novel.Show do
       if novel.check_user.do_notify do
         [button_show_update_history(novel.id)]
       else
-        [button_show_update_history(novel.id),button_read_update_history(novel.id)]
+        [button_show_update_history(novel.id),button_show_user_unread_episode(novel.id)]
       end
     %F.Box{
       layout: :horizontal,
@@ -177,10 +177,10 @@ defmodule NarouUpdateNotifyBot.Template.Novel.Show do
     }
   end
 
-  def button_read_update_history(novel_id) do
+  def button_show_user_unread_episode(novel_id) do
     %F.Button{
       action: %M.Action.Postback{
-        data: postback_data(%{action: "/novel/read_update_history", novel_id: novel_id}),
+        data: postback_data(%{action: "/novel/show_user_unread_episode", novel_id: novel_id, confirm: true}),
         label: "未読を読む"
       }
     }
