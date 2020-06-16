@@ -8,6 +8,7 @@
 !spec/*
 !tmp
 !.formatter.exs
+!elixir_buildpack.config
 !mix.exs
 !Procfile
 !README.md
