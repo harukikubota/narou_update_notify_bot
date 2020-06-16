@@ -2,8 +2,9 @@
 /deps/
 /doc/
 /.elixir_ls
-/.idea
 erl_crash.dump
 *.ez
+/.vscode
 narou_update_notify_bot-*.tar
 /priv/static/
+.tool-versions
