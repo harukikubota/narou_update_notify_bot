@@ -1,15 +1,22 @@
 defmodule NarouUpdateNotifyBot.JobService.FetchWritersAndCreateNotificationFacts do
   alias NarouUpdateNotifyBot.Repo
-  #alias NarouUpdateNotifyBot.Entity.Helper
+  alias NarouUpdateNotifyBot.JobService.JobControlActivity
   require Logger
 
   @child NarouUpdateNotifyBot.JobService.ApplyRemoteData
   @group_max_novel_cnt 2499
 
   def exec() do
-    fetch_target_writers()
-    |> grouping_writer_ids_to_fetch_data()
-    |> Enum.each(&fetch_and_apply_remote_data/1)
+    if JobControlActivity.job_activity? do
+      Logger.info "start job FetchWritersAndCreateNotificationFacts"
+      fetch_target_writers()
+      |> grouping_writer_ids_to_fetch_data()
+      |> Enum.each(&fetch_and_apply_remote_data/1)
+
+      Logger.info "end job FetchWritersAndCreateNotificationFacts"
+    else
+      Logger.info "from FetchWritersAndCreateNotificationFacts: job stopped."
+    end
   end
 
   defp fetch_target_writers(), do: Repo.Writers.records_to_fetch()

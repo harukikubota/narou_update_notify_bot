@@ -15,4 +15,16 @@ config :line_bot,
 
 config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
 
+config :narou_update_notify_bot, NarouUpdateNotifyBot.Scheduler,
+  jobs: [
+    {
+      "* * * * *",
+      fn -> NarouUpdateNotifyBot.JobService.FetchWritersAndCreateNotificationFacts.exec end
+    },
+    {
+      "*/5 * * * *",
+      fn -> NarouUpdateNotifyBot.JobService.NotificationToUser.exec end
+    }
+  ]
+
 config :logger, level: if Mix.env == :test, do: :error, else: :debug

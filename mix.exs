@@ -34,7 +34,7 @@ defmodule NarouUpdateNotifyBot.MixProject do
       {:jason, "~> 1.0"},
       {:tzdata, "~> 1.0.3"},
       {:plug_cowboy, "~> 2.0"},
-      {:logger_file_backend, "~> 0.0.10"}
+      {:quantum, "~> 3.0"}
     ]
   end
 

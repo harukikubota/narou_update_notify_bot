@@ -6,7 +6,8 @@ defmodule NarouUpdateNotifyBot.Application do
   def start(_type, _args) do
     children = [
       NarouUpdateNotifyBot.Repo,
-      Plug.Cowboy.child_spec(scheme: :http, plug: NarouUpdateNotifyBot.Router, options: [port: 4001])
+      Plug.Cowboy.child_spec(scheme: :http, plug: NarouUpdateNotifyBot.Router, options: [port: 4001]),
+      NarouUpdateNotifyBot.Scheduler
     ]
 
     opts = [strategy: :one_for_one, name: NarouUpdateNotifyBot.Supervisor]

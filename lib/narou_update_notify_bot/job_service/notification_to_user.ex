@@ -3,15 +3,24 @@ defmodule NarouUpdateNotifyBot.JobService.NotificationToUser do
     NotificationFacts
   }
   alias NarouUpdateNotifyBot.Template.JobService.Notificate_data, as: Template
+  alias NarouUpdateNotifyBot.JobService.JobControlActivity
   require Logger
 
   def exec do
-    update_records_not_to_be_notified()
+    if JobControlActivity.job_activity? do
+      Logger.info "start job NotificationToUser"
 
-    notification_facts()
-    |> update_all_to_job_touch
-    |> allocate_to_each_user
-    |> Enum.each(&notification_to_user/1)
+      update_records_not_to_be_notified()
+
+      notification_facts()
+      |> update_all_to_job_touch
+      |> allocate_to_each_user
+      |> Enum.each(&notification_to_user/1)
+
+      Logger.info "end job NotificationToUser"
+    else
+      Logger.info "from NotificationToUser: job stopped."
+    end
   end
 
   defp update_records_not_to_be_notified do
@@ -32,7 +41,7 @@ defmodule NarouUpdateNotifyBot.JobService.NotificationToUser do
 
   def notification_to_user(records) do
     user_id = hd(records).user.line_id
-    Logger.info user_id
+
     case LineBot.send_push(user_id, render_message(records)) do
       {:ok, _}    -> NotificationFacts.change_status_all(records, :notificated)
       {_, reason} -> NotificationFacts.change_status_all(records, :error, reason)
