@@ -26,7 +26,6 @@ defmodule NarouUpdateNotifyBot.MixProject do
   defp deps do
     [
       {:narou, git: "https://github.com/harukikubota/narou.git", tag: "0.2.3"},
-      {:line_bot, "~> 0.1.0"},
       {:ecto_enum, "~> 1.4"},
       {:ecto_sql, "~> 3.4"},
       {:postgrex, ">= 0.0.0"},
